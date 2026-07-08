@@ -7,7 +7,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+
+    env:
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      ANDROID_HOME: ${{ github.workspace }}/android-sdk
 
     steps:
       - name: Checkout code
@@ -25,12 +29,25 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Android SDK
-        uses: amyu/setup-android@v2
-        with:
-          api-version: '35'
-          build-tools-version: '35.0.0'
-          ndk-version: '25.1.8937393'
+      - name: Install Android command-line tools
+        run: |
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          cd $ANDROID_SDK_ROOT/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip
+          mv cmdline-tools latest
+          rm cmdline-tools.zip
+          ls -la $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/
+
+      - name: Accept Android SDK licenses
+        run: |
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+
+      - name: Install Android SDK components
+        run: |
+          export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;25.1.8937393"
+          sdkmanager --list_installed
 
       - name: Create local.properties
         run: |
