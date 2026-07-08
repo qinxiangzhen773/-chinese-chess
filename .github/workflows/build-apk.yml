@@ -28,7 +28,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-36 build-tools;36.0.0 ndk;25.1.8937393'
+          packages: 'platforms;android-35 build-tools;35.0.0 ndk;25.1.8937393'
+
+      - name: Create local.properties
+        run: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          echo "flutter.versionCode=1" >> android/local.properties
+          echo "flutter.versionName=1.0" >> android/local.properties
 
       - name: Download NNUE weight file
         run: |
