@@ -26,14 +26,11 @@ jobs:
           cache: true
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: amyu/setup-android@v2
         with:
-          cmdline-tools-version: 'latest'
-          packages: |
-            platform-tools
-            platforms;android-35
-            build-tools;35.0.0
-            ndk;25.1.8937393
+          api-version: '35'
+          build-tools-version: '35.0.0'
+          ndk-version: '25.1.8937393'
 
       - name: Create local.properties
         run: |
