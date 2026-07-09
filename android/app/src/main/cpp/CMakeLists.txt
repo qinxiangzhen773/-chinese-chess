@@ -39,7 +39,9 @@ include_directories(
 )
 
 target_compile_definitions(fishengine PRIVATE
+    IS_64BIT
     NNUE_EMBEDDING_OFF
+    NDEBUG
 )
 
 target_compile_options(fishengine PRIVATE
@@ -47,6 +49,8 @@ target_compile_options(fishengine PRIVATE
     -Wno-sign-compare
     -Wno-reorder
     -Wno-missing-field-initializers
+    -Wno-unused-function
+    -Wno-deprecated-volatile
 )
 
 target_link_libraries(

@@ -37,4 +37,3 @@ echo.
 echo   推送后，GitHub 自动开始云端打包！
 echo   完成后在 Actions 页面下载 APK。
 echo ============================================
-pause
