@@ -65,6 +65,42 @@ jobs:
       - name: Get Flutter dependencies
         run: flutter pub get
 
+      - name: Test NDK compile (diagnostic)
+        run: |
+          NDK_BIN="$ANDROID_SDK_ROOT/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          export PATH="$NDK_BIN:$PATH"
+          CPP_DIR="android/app/src/main/cpp"
+          PIKA="$CPP_DIR/pikafish/src"
+          echo "=== Testing NDK toolchain ==="
+          aarch64-linux-android21-clang++ --version
+          echo "=== Compiling position.cpp ==="
+          aarch64-linux-android21-clang++ -std=c++17 \
+            -DIS_64BIT -DUSE_NEON -DNNUE_EMBEDDING_OFF -DNDEBUG \
+            -fPIC -fPIE \
+            -I "$CPP_DIR" \
+            -I "$PIKA" \
+            -I "$PIKA/nnue" \
+            -I "$PIKA/nnue/features" \
+            -I "$PIKA/nnue/layers" \
+            -I "$PIKA/external" \
+            -I "$PIKA/external/common" \
+            -I "$PIKA/external/decompress" \
+            -c "$PIKA/position.cpp" -o /tmp/position.o 2>&1
+          echo "=== Compiling engine_wrapper.cpp ==="
+          aarch64-linux-android21-clang++ -std=c++17 \
+            -DIS_64BIT -DUSE_NEON -DNNUE_EMBEDDING_OFF -DNDEBUG \
+            -fPIC -fPIE \
+            -I "$CPP_DIR" \
+            -I "$PIKA" \
+            -I "$PIKA/nnue" \
+            -I "$PIKA/nnue/features" \
+            -I "$PIKA/nnue/layers" \
+            -I "$PIKA/external" \
+            -I "$PIKA/external/common" \
+            -I "$PIKA/external/decompress" \
+            -c "$CPP_DIR/engine_wrapper.cpp" -o /tmp/engine_wrapper.o 2>&1
+          echo "=== Diagnostic complete ==="
+
       - name: Build release APK
         id: build_apk
         run: |
