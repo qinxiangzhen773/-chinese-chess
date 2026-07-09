@@ -69,7 +69,15 @@ jobs:
         id: build_apk
         run: |
           set -o pipefail
-          flutter build apk --release --verbose 2>&1 | tee build_output.log
+          flutter build apk --release 2>&1 | tee build_output.log
+          BUILD_EXIT=${PIPESTATUS[0]}
+          echo ""
+          echo "========================================"
+          echo "=== CRITICAL: ERROR/WARNING EXTRACTION ==="
+          echo "========================================"
+          grep -n -i -E "error|FAILED|FAILURE|undefined reference|cannot find|not found|fatal|BUILD FAILED|compilation terminated|No such file|ninja: build stopped" build_output.log || echo "(no critical errors found in output)"
+          echo "========================================"
+          exit $BUILD_EXIT
 
       - name: Upload build failure log
         if: failure()
