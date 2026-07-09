@@ -7,16 +7,16 @@
 #include <vector>
 #include <deque>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "engine.h"
 #include "search.h"
 #include "thread.h"
 #include "ucioption.h"
 #include "uci.h"
 #include "movegen.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static std::unique_ptr<Stockfish::Engine> g_engine;
 static std::atomic<bool> g_searching{false};

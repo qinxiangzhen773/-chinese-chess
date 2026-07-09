@@ -14,11 +14,12 @@ file(GLOB PIKAFISH_SOURCES
     ${PIKAFISH_SRC_DIR}/nnue/layers/*.cpp
     ${PIKAFISH_SRC_DIR}/external/common/*.cpp
     ${PIKAFISH_SRC_DIR}/external/decompress/*.cpp
-    ${PIKAFISH_SRC_DIR}/universal/*.cpp
 )
 
 list(REMOVE_ITEM PIKAFISH_SOURCES ${PIKAFISH_SRC_DIR}/main.cpp)
 list(REMOVE_ITEM PIKAFISH_SOURCES ${PIKAFISH_SRC_DIR}/benchmark.cpp)
+# Remove universal entry points - they define main() which conflicts with the library build
+list(FILTER PIKAFISH_SOURCES EXCLUDE REGEX "universal/")
 
 add_library(
     fishengine
