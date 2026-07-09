@@ -1,4 +1,5 @@
 #include <string>
+#include <string_view>
 #include <cstring>
 #include <memory>
 #include <atomic>
@@ -14,10 +15,25 @@
 #include "uci.h"
 #include "movegen.h"
 
-#ifdef __cplusplus
+// === Forward declarations ===
 extern "C" {
-#endif
+    const char* get_engine_version();
+    void init_engine();
+    void load_nnue(const char* nnue_path);
+    void new_game();
+    const char* get_board();
+    void make_move(const char* move_str);
+    int undo_move();
+    int is_move_legal(const char* move_str);
+    int get_game_status();
+    int is_in_check();
+    int get_move_history_count();
+    const char* get_last_move();
+    const char* get_best_move(int depth);
+    void free_memory();
+}
 
+// === Internal state ===
 static std::unique_ptr<Stockfish::Engine> g_engine;
 static std::atomic<bool> g_searching{false};
 static std::string g_bestmove;
@@ -28,12 +44,14 @@ static std::condition_variable g_cv;
 static std::vector<std::string> g_fen_history;
 static std::vector<std::string> g_move_history;
 
-const char* get_engine_version() {
+// === Implementations ===
+
+extern "C" const char* get_engine_version() {
     static const char* version = "Pikafish 1.0.0";
     return version;
 }
 
-void init_engine() {
+extern "C" void init_engine() {
     if (!g_engine) {
         g_engine = std::make_unique<Stockfish::Engine>();
         g_engine->set_tt_size(256);  // 256 MB transposition table for better mid/endgame
@@ -43,13 +61,13 @@ void init_engine() {
     }
 }
 
-void load_nnue(const char* nnue_path) {
+extern "C" void load_nnue(const char* nnue_path) {
     if (g_engine && nnue_path) {
         g_engine->load_network(std::string(nnue_path));
     }
 }
 
-void new_game() {
+extern "C" void new_game() {
     if (g_engine) {
         g_engine->set_position(Stockfish::StartFEN, {});
     }
@@ -57,7 +75,7 @@ void new_game() {
     g_move_history.clear();
 }
 
-const char* get_board() {
+extern "C" const char* get_board() {
     static char buffer[1024];
     if (g_engine) {
         std::string fen = g_engine->fen();
@@ -69,7 +87,7 @@ const char* get_board() {
     return buffer;
 }
 
-void make_move(const char* move_str) {
+extern "C" void make_move(const char* move_str) {
     if (g_engine && move_str && strlen(move_str) >= 4) {
         // Save current state for undo
         g_fen_history.push_back(g_engine->fen());
@@ -78,7 +96,7 @@ void make_move(const char* move_str) {
     }
 }
 
-int undo_move() {
+extern "C" int undo_move() {
     if (!g_engine || g_move_history.size() < 2) return 0;
 
     // Remove the last human+AI move pair
@@ -102,7 +120,7 @@ int undo_move() {
     return 1;
 }
 
-int is_move_legal(const char* move_str) {
+extern "C" int is_move_legal(const char* move_str) {
     if (!g_engine || !move_str || strlen(move_str) < 4) {
         return 0;
     }
@@ -118,7 +136,7 @@ int is_move_legal(const char* move_str) {
     return tempPos.legal(m) ? 1 : 0;
 }
 
-int get_game_status() {
+extern "C" int get_game_status() {
     // Returns: 0 = ongoing, 1 = red wins (checkmate), 2 = black wins (checkmate), 3 = draw
     if (!g_engine) return 0;
     
@@ -153,7 +171,7 @@ int get_game_status() {
     return 0;  // Game ongoing
 }
 
-int is_in_check() {
+extern "C" int is_in_check() {
     if (!g_engine) return 0;
     
     Stockfish::StateListPtr tempStates(new std::deque<Stockfish::StateInfo>(1));
@@ -166,11 +184,11 @@ int is_in_check() {
     return (tempPos.checkers() && (tempPos.checkers() & kingSq)) ? 1 : 0;
 }
 
-int get_move_history_count() {
+extern "C" int get_move_history_count() {
     return (int)g_move_history.size();
 }
 
-const char* get_last_move() {
+extern "C" const char* get_last_move() {
     static char move[16];
     move[0] = '\0';
     if (!g_move_history.empty()) {
@@ -180,7 +198,7 @@ const char* get_last_move() {
     return move;
 }
 
-void on_bestmove_callback(std::string_view bestmove, std::string_view) {
+static void on_bestmove_callback(std::string_view bestmove, std::string_view) {
     {
         std::lock_guard<std::mutex> lock(g_mutex);
         g_bestmove = std::string(bestmove);
@@ -189,7 +207,7 @@ void on_bestmove_callback(std::string_view bestmove, std::string_view) {
     g_cv.notify_one();
 }
 
-const char* get_best_move(int depth) {
+extern "C" const char* get_best_move(int depth) {
     static char move[16];
     move[0] = '\0';
     
@@ -225,14 +243,10 @@ const char* get_best_move(int depth) {
     return move;
 }
 
-void free_memory() {
+extern "C" void free_memory() {
     g_engine.reset();
     g_searching = false;
     g_bestmove.clear();
     g_fen_history.clear();
     g_move_history.clear();
 }
-
-#ifdef __cplusplus
-}
-#endif

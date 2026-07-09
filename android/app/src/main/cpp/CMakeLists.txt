@@ -40,6 +40,7 @@ include_directories(
 
 target_compile_definitions(fishengine PRIVATE
     IS_64BIT
+    USE_NEON
     NNUE_EMBEDDING_OFF
     NDEBUG
 )
