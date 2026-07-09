@@ -159,7 +159,7 @@ extern "C" int get_game_status() {
         // No legal moves - check if in check (checkmate) or stalemate (draw)
         Stockfish::Color sideToMove = tempPos.side_to_move();
         Stockfish::Square kingSq = tempPos.king_square(sideToMove);
-        bool inCheck = tempPos.checkers() && (tempPos.checkers() & kingSq);
+        bool inCheck = tempPos.checkers() && (tempPos.checkers() & (Stockfish::Bitboard(1) << kingSq));
         
         if (sideToMove == Stockfish::WHITE) {
             return inCheck ? 2 : 3;  // White has no moves: black wins or draw
@@ -181,7 +181,7 @@ extern "C" int is_in_check() {
     Stockfish::Color sideToMove = tempPos.side_to_move();
     Stockfish::Square kingSq = tempPos.king_square(sideToMove);
     
-    return (tempPos.checkers() && (tempPos.checkers() & kingSq)) ? 1 : 0;
+    return (tempPos.checkers() && (tempPos.checkers() & (Stockfish::Bitboard(1) << kingSq))) ? 1 : 0;
 }
 
 extern "C" int get_move_history_count() {
