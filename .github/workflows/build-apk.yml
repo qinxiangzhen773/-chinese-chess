@@ -65,6 +65,9 @@ jobs:
       - name: Get Flutter dependencies
         run: flutter pub get
 
+      - name: Flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1
+
       - name: Test NDK compile (diagnostic)
         run: |
           NDK_BIN="$ANDROID_SDK_ROOT/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin"
